@@ -1,0 +1,17 @@
+our transpiler class extends the base class ast.NodeVisitor
+ast.parse(code) parses the python code into an AST tree. the code must be in string format. 
+the ast tree is a tree of nodes of the code. learn more about ast tree here: https://youtu.be/wINY109MG10?si=E7qEQtEB-vfcDphk
+
+after parsing, the tree is sent to the visit method by self.visit(tree). the visit is a generic method. if the program finds a visit_Module
+in our program then fine otherwise it will loop over to visit_Body which inturn calls the visit_ + <NodeType> method. this 
+visit_ + <NodeType> method is selected according to the corresponding nodes. for eg if the node is expr then visit_Expr
+will be selected and so on... 
+
+now the assignment has either a name or constant or something (eg x is a name node and 5 is a constant node in the assignment x = 5)
+so the target is x and value = self.visit(node.value) is 5 and thus the output list gets appended with our outpur javascript string.
+
+basically we read what kind of statement or expression we see and we print accordingly. 
+these statesments can be simple or complex. the more complex statement, the more stack is used. 
+
+in the end we join all outpur elements and print them on screen with: return "\n".join(self.output)
+
