@@ -1,48 +1,22 @@
 import ast
+import os
+from loop_translators import loopHandlers
+from operator_maps import (
+COMPARE_OP_MAP,
+BOOL_OP_MAP,
+UNARY_OP_MAP,
+BINARY_OP_MAP,
+AUG_ASSIGN_OP_MAP
+)
 
-# Operator Mappings
-
-COMPARE_OP_MAP = {
-    ast.Eq: "===",
-    ast.NotEq: "!==",
-    ast.Lt: "<",
-    ast.LtE: "<=",
-    ast.Gt: ">",
-    ast.GtE: ">=",
-    ast.Is: "===",
-    ast.IsNot: "!==",
-    ast.In: "in",
-    ast.NotIn: "not in",  # Will need special handling later
-}
-
-BOOL_OP_MAP = {
-    ast.And: "&&",
-    ast.Or: "||",
-}
-
-UNARY_OP_MAP = {
-    ast.UAdd: "+",
-    ast.USub: "-",
-    ast.Not: "!",
-    ast.Invert: "~",
-}
-
-BINARY_OP_MAP = {
-    ast.Add: "+",
-    ast.Or: "||",
-}
-
-
-
-
-class PyToJsTranspiler(ast.NodeVisitor):
+class PyToJsTranspiler(ast.NodeVisitor, loopHandlers):
     def __init__(self):
         self.output = []
         self.indent_level = 0
         self.declared_vars = set()
 
     def emit(self,line):
-        indent = "  "*self.indent_level
+        indent = "    "*self.indent_level
         self.output.append(indent + line)
 
     def eval_if_constant(self, node):
@@ -55,16 +29,26 @@ class PyToJsTranspiler(ast.NodeVisitor):
         return node.id
 
     def visit_Constant(self, node):
+        if node.value is None:
+            return "null"
+        elif node.value is True:
+         return "true"
+        elif node.value is False:
+            return "false"
         return repr(node.value)
     
     def visit_BoolOp(self,node):
         operation = BOOL_OP_MAP[type(node.op)]
-        vals = []
-        for value in node.values:
-            vals.append(self.visit(value))
-        return(f"({vals[0]}) {operation} ({vals[1]})")
+        values = [self.visit(v) for v in node.values]
+        return f"({ f" {operation} ".join(f"({v})" for v in values)})"
     
     def visit_BinOp(self,node):
+        print(ast.dump(node))
+        if isinstance(node.left, ast.List) and isinstance(node.op, ast.Mult):
+            count = self.visit(node.right)
+            val = self.visit(node.left.elts[0])
+            return f"Array({count}).fill({val})"
+
         operation = BINARY_OP_MAP[type(node.op)]
         left = self.visit(node.left)
         right = self.visit(node.right)
@@ -80,7 +64,6 @@ class PyToJsTranspiler(ast.NodeVisitor):
         return(f"{operation}({oper})")
     
     def visit_Compare(self,node):
-        # print("Compare: " , ast.dump(node))
         target = self.visit(node.left)
         value = self.visit(node.comparators[0])
         op = node.ops[0]
@@ -88,28 +71,40 @@ class PyToJsTranspiler(ast.NodeVisitor):
         return(f"{target} {operation} {value}")
     
     def visit_Assign(self, node):
-        # print("Assign:  ","node.targets: ", ast.dump(node.targets[0], indent=4))
         # Assume single assignment target
         target = self.visit(node.targets[0])
         value = self.visit(node.value)
         if target not in self.declared_vars:
             self.declared_vars.add(target)
-            self.emit(f"let {target} = {value};")
+            if isinstance(node.value, ast.Constant):
+                self.emit(f"let {target} = {value};")
+            else:
+                self.emit(f"const {target} = {value};")
         else:
             self.emit(f"{target} = {value};")
 
+    #augAssign
+    def visit_AugAssign(self, node):
+        target = self.visit(node.target)
+        op = AUG_ASSIGN_OP_MAP[type(node.op)]
+        value = self.visit(node.value)
+        return f"{target} {op} {value}"
+
     def visit_Expr(self, node):
         # Handle expression statements (like print)
-        # print("expr:  ", "node.value: ", ast.dump(node.value, indent=4))
         expr = self.visit(node.value)
         self.emit(expr + ";")
+
+    def visit_Return(self,node):
+        stmt = self.visit(node.value)
+        self.emit(f"return {stmt};")
     
     def visit_Call(self, node):
-        # Basic print() handling
         if isinstance(node.func, ast.Name) and node.func.id == "print":
             args = ", ".join(self.visit(arg) for arg in node.args)
             return f"console.log({args})"
-        if isinstance(node.func, ast.Name) and node.func.id == "range":
+        
+        elif isinstance(node.func, ast.Name) and node.func.id == "range":
             args = node.args
             def get_val(arg):
                 val = self.eval_if_constant(arg)
@@ -129,19 +124,22 @@ class PyToJsTranspiler(ast.NodeVisitor):
             else:
                 return "/* Unsupported range usage */"
             return [start, end, step]
-
+        else:
+            funcName = node.func.id
+            arguments = [self.visit(arg) for arg in node.args]
+            arguments_str = ", ".join(arg for arg in arguments)
+            return f"{funcName}({arguments_str})"
 
         return "/* Unsupported function call */"
     
     # Conditional statements is below
 
     def visit_If(self,node, is_elif = False):
-        # print("inside if: ", ast.dump(node, indent=2))
         condition = self.visit(node.test)
         if is_elif:
-            self.emit(f"else if {condition} " + "{")
+            self.emit(f"else if ({condition}" + ") {")
         else:
-            self.emit(f"if {condition} " + "{")
+            self.emit(f"if ({condition}) " + "{")
         self.indent_level += 1
         for statement in node.body:
             self.visit(statement)
@@ -158,61 +156,172 @@ class PyToJsTranspiler(ast.NodeVisitor):
                 self.indent_level -= 1
                 self.emit("}")
 
-    # We are starting with loops here: 
-
-    def visit_While(self,node):
+    def visit_IfExp(self, node):
         condition = self.visit(node.test)
-        self.emit(f"while {condition}" + " {")
+        body = self.visit(node.body)
+        orelse = self.visit(node.orelse)
+        return f"({condition} ? {body} : {orelse})"
+
+    # Definining custom Functions: 
+
+    def visit_FunctionDef(self, node):
+        functionName = node.name
+        arguments = [arg.arg for arg in node.args.args]
+        if node.args.defaults:
+            defaults = [self.visit(default) for default in node.args.defaults]
+            N = len(arguments)-1
+            while defaults:
+                arguments[N] = " = ".join([arguments[N], defaults.pop(len(defaults)-1)])
+                N -= 1
+        arguments_strings = ', '.join(arg for arg in arguments)
+
+        self.emit(f"const {functionName} = ({arguments_strings})=>" + "{")
         self.indent_level += 1
-        for statement in node.body:
-            self.visit(statement)
+        for stmt in node.body:
+            self.visit(stmt)
         self.indent_level -= 1
         self.emit("}")
 
-        # we have some trouble in the for loop : cant have negetive iterators
+        #  List Comprehension: 
 
-    def visit_For(self,node):
-        itr = node.target.id
-        decl = ""
-        if itr not in self.declared_vars:
-            self.declared_vars.add(itr)
-            decl = "let "
-        values = self.visit(node.iter)
-        print(values)
-        start, end, step = values
-
-        step_val = self.eval_if_constant(step)
-        if step_val is not None:
-            print("holaaaaaaaa")
-            comparator = "<" if step_val > 0 else ">"
-            increment = "+" if step_val > 0 else "-"
+    def visit_List(self,node):
+        array = []
+        for item in node.elts:
+            array.append(self.visit(item))
+        return f"[{", ".join(array)}]"
+    
+    def visit_comprehension(self, node):
+        target = self.visit(node.target)
+        if isinstance(node.iter, ast.Name):
+            iterable = self.visit(node.iter)
         else:
-            print(step, type(step))
-            comparator = "<"  # Default to less-than if step is variable
-            increment = "+"  # we have some issue here. we cant extract negetive iterator value.
-        self.emit(f"For ({decl}{itr}= {start}, {itr}{comparator}{end}, {itr}={itr}{increment}{step})" + " {")
+            iterable = self.visit(node.iter)
+            # length = iterable[1]
+        # return {"target": target, "iterable" : iterable}
+        return [ target, iterable]
+    
+    # def visit_ListComp(self, node):
+    #     stmt = self.visit(node.elt)
+    #     target, length = self.visit(node.generators[0])
+    #     print("length: ", length)
+    #     return f"Array.from(" + "{" + f"length: {length}" + "}" + f", (_, {target}) => {stmt})"
+    
+    def visit_ListComp(self, node):
+        print(ast.dump(node))
+        # Handle the expression inside the list comprehension
+        expression = self.visit(node.elt)
+        # Handle the iterable
+        iter = self.visit(node.generators[0])
+        print(iter)
+        print("lis:", iter)
+        print(expression)
+        # Return the equivalent JavaScript code using map
+        return f"{iter[1]}.map(({iter[0]}) => {expression})"
+
+    # Dict Literals
+
+    def visit_Dict(self,node):
+        keys, vals =[], []
+        for key in node.keys:
+            keys.append(self.visit(key))
+        for val in node.values:
+            vals.append(self.visit(val))
+        ret_str =[]
+        for i in range(len(keys)):
+            ret_str.append(f"{keys[i]} : {vals[i]}")
+        return "{" + ", ".join(ret_str) + "}"
+    
+    # Set Literals
+    
+    def visit_Set(self,node):
+        keys = []
+        for key in node.elts:
+            keys.append(self.visit(key))
+        return "new Set([" + ", ".join(keys) + "])"
+    
+    # Subscript
+
+    def visit_Subscript(self, node):
+        value = self.visit(node.value)
+        slice = self.visit(node.slice)
+        if isinstance(node.slice, ast.Constant):
+            return f"{value}[{slice}]"
+        elif isinstance(node.slice, ast.Slice):
+            return f"{value}.slice({slice})"
+        return "/* Unsupported Subscript type usage. Only Slice and Constant are the Supported Types.  */"
+    
+    def visit_Slice(self, node):
+        lower = self.visit(node.lower)
+        upper = self.visit(node.upper)
+        return f"{lower},{upper}"
+    
+    # Import Statements: 
+    # def visit_alias(self, node):
+    #     return node.name
+    
+    def visit_Import(self, node):
+        for alias in node.names:
+            module = alias.name
+            asname = alias.asname or module
+            self.emit(f"import * as {asname} from '{module}';")
+        return None
+    
+    def visit_ImportFrom(self, node):
+        module = node.module
+        packages = []
+        for alias in node.names:
+            packages.append(alias.name)
+        self.emit("import {" + f"{ ", ".join(packages) }" + "} from" + f" '{module}';")
+
+    # ?try catch blockssss
+    def visit_Try(self, node):
+        print("try node: ", ast.dump(node.handlers[0]))
+        self.emit("try {")
         self.indent_level += 1
-        for statement in node.body:
-            self.visit(statement)
+        for stmt in node.body:
+            self.visit(stmt)
         self.indent_level -= 1
         self.emit("}")
-        # Remove iterator after loop if it's temporary
-        self.declared_vars.discard(itr)
+
+        for handler in node.handlers:
+            exception_name = "e"  # default name
+            if handler.type:
+                exception_name = handler.name
+                # exception_name = self.visit(handler.type)
+            self.emit(f"catch ({exception_name}) " + "{")
+            self.indent_level += 1
+            for stmt in handler.body:
+                print("stmt: ", ast.dump(stmt))
+                self.visit(stmt)
+            self.indent_level -= 1
+            self.emit("}")
+        
+        if node.finalbody:
+            self.emit("finally {")
+            self.indent_level += 1
+            for stmt in node.finalbody:
+                self.visit(stmt)
+            self.indent_level -= 1
+            self.emit("}")
 
     def transpile(self, code):
         tree = ast.parse(code)
-        print("tree:  ", ast.dump(tree, indent=4))
+        # print("tree:  ", ast.dump(tree, indent=4))
         self.visit(tree)
         return "\n".join(self.output)
 
 # Example usage
 if __name__ == "__main__":
-    python_code = '''
-x = 5
-for i in range(1, x, 2):
-    print(i)
-
-'''
+    fileName = "test1"
+    test_path = os.path.join(os.path.dirname(__file__),"..", "tests", f"{fileName}.py")
+    with open(test_path, "r") as f:
+        python_code = f.read()
     transpiler = PyToJsTranspiler()
     js_code = transpiler.transpile(python_code)
-    print(js_code)
+
+    output_dir = os.path.join(os.path.dirname(__file__), "..", "output")
+    os.makedirs(output_dir, exist_ok=True)  # Create the folder if it doesn't exist
+    output_path = os.path.join(output_dir, f"{fileName}Output.js")
+    with open(output_path, "w") as f:
+        f.write(js_code)
+        print("✅ Transpilation complete. Output saved to output.js", )
