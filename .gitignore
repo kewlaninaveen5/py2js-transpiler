@@ -9,3 +9,6 @@ __pycache__/
 
 # Ignore log files
 *.log
+
+#Ignore output files and folder
+output/
