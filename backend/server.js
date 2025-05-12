@@ -13,16 +13,14 @@ const allowedOrigins = [
     'https://py2jstranspiler.netlify.app',
   ];
 app.use(cors({
-    // origin: 'https://py2jstranspiler.netlify.app', // change if your frontend runs elsewhere
     origin: function (origin, callback) {
-        // Allow requests with no origin (like mobile apps or curl requests) 
         if (!origin || allowedOrigins.includes(origin)) {
           callback(null, true);
         } else {
           callback(new Error('Not allowed by CORS'));
         }},
     optionsSuccessStatus: 200,
-    methods: ['GET', 'POST'],               // or ['GET', 'POST'] if needed  
+    methods: ['GET', 'POST'],
     credentials: true
 }));
 const PORT = process.env.PORT || 5001;
@@ -53,7 +51,7 @@ app.post("/api/convert", (req, res) => {
         });
 
         pyshell.end(function (err, code, signal) {
-            if (err) return res.status(500).json({ error: "Python transpiler crashed. Please try again later." });;
+            if (err) return res.status(500).json({ error: err });;
             console.log('Exit code:', code);
             console.log('Exit signal:', signal);
             res.json({ jsCode: result });
