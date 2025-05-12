@@ -9,39 +9,20 @@ const { PythonShell } = require("python-shell")    // Allows us to run Python co
 const app = express();
 app.use(cors({
     origin: 'http://localhost:3000', // change if your frontend runs elsewhere
-    methods: ['GET', 'POST'],               // or ['GET', 'POST'] if needed
+    methods: ['GET', 'POST'],               // or ['GET', 'POST'] if needed  
     credentials: true
 }));
-const PORT = 5001;
+const PORT = process.env.PORT || 5001;
 
 app.use(bodyParser.json())
 
-const pythonFilePath = '/Users/naveenkewlani/Desktop/webProjects/py2js-transpiler/core/py2js_transpiler.py';
+const pythonFilePath = __dirname + "/core/py2js_transpiler.py";
 const pyshell = new PythonShell(pythonFilePath,{
     mode: 'text',
     pythonPath: 'python3',
     // scriptPath: pythonFilePath
 });
 let result = ''; // accumulate all lines
-
-// app.post("/api/convert", (req, res) => {        // python working: VK
-//     const pythonCode = req.body.code
-//     let options = {
-//         mode: 'text',
-//         pythonPath: 'python3',
-//         pythonOptions: ['-u'],
-//         scriptPath: path.dirname(pythonFilePath),
-//         stderrParser: (line) => console.error("PYTHON STDERR:", line),
-//         timeout: 10 // in seconds
-//     };
-//     console.log("vk: ", pythonCode);
-//     PythonShell.runString(String(pythonCode)).then(message => {
-//         console.log('vkkkkk finished');
-//         console.log(message);
-//         res.json({ jsCode: message });
-//     });
-
-// });
 
 app.post("/api/convert", (req, res) => {  
     const pythonCode = req.body.code          //python file working -Naveen
@@ -55,7 +36,7 @@ app.post("/api/convert", (req, res) => {
         // res.json({ jsCode: message });
     });
     
-    // end the input stream and allow the process to exit
+    // end the input stream and allow the process to exit 
     pyshell.end(function (err, code, signal) {
         if (err) throw err;
         console.log(result)
