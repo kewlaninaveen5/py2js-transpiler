@@ -9,6 +9,7 @@ const { PythonShell } = require("python-shell")    // Allows us to run Python co
 const app = express();
 app.use(cors({
     origin: 'https://py2jstranspiler.netlify.app', // change if your frontend runs elsewhere
+    // origin: 'http://localhost:3000', // change if your frontend runs elsewhere
     optionsSuccessStatus: 200,
     methods: ['GET', 'POST'],               // or ['GET', 'POST'] if needed  
     credentials: true
@@ -18,16 +19,19 @@ const PORT = process.env.PORT || 5001;
 app.use(bodyParser.json())
 
 const pythonFilePath = __dirname + "/core/py2js_transpiler.py";
-const pyshell = new PythonShell(pythonFilePath,{
-    mode: 'text',
-    pythonPath: 'python3',
-    // scriptPath: pythonFilePath
-});
-let result = ''; // accumulate all lines
+
 
 app.post("/api/convert", (req, res) => {  
     const pythonCode = req.body.code          //python file working -Naveen
     console.log(pythonCode)
+
+    const pyshell = new PythonShell(pythonFilePath,{
+        mode: 'text',
+        pythonPath: 'python3',
+        // scriptPath: pythonFilePath
+    });
+    let result = ''; // accumulate all lines
+
     pyshell.send(pythonCode);
 
     pyshell.on('message', function (message) {
