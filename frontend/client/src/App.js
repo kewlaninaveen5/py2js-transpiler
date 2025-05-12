@@ -15,8 +15,13 @@ function App() {
     setLoading(true);
     setError(null);
     try {
-      const response = await axios.post("http://localhost:5001/api/convert", {
-        code: pythonCode == '' ? 'print("Hello World")' : pythonCode ,
+      const BACKEND_URL =
+        window.location.hostname === 'localhost'
+          ? 'http://localhost:5001'
+          : 'https://py2js-transpiler.onrender.com';
+
+      const response = await axios.post(`${BACKEND_URL}/api/convert`, {
+        code: pythonCode === '' ? 'print("Hello World")' : pythonCode,
       });
 
       setJsCode(response.data.jsCode || '');
