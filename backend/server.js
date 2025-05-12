@@ -8,7 +8,8 @@ const { PythonShell } = require("python-shell")    // Allows us to run Python co
 
 const app = express();
 app.use(cors({
-    origin: 'https://py2jstranspiler.netlify.app/', // change if your frontend runs elsewhere
+    origin: 'https://py2jstranspiler.netlify.app', // change if your frontend runs elsewhere
+    optionsSuccessStatus: 200,
     methods: ['GET', 'POST'],               // or ['GET', 'POST'] if needed  
     credentials: true
 }));
