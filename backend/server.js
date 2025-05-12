@@ -1,6 +1,6 @@
 const express = require('express')
 const cors = require('cors');
-const path = require('path');
+// const path = require('path');
 const bodyParser = require('body-parser')
 const { PythonShell } = require("python-shell")    // Allows us to run Python code from Node.js
 

@@ -2,7 +2,7 @@ import React, { useState } from 'react';
 import axios from 'axios';
 import './App.css'
 import FileUploader from './FileUploader';
-import Editor, { DiffEditor, useMonaco, loader } from '@monaco-editor/react';
+import Editor from '@monaco-editor/react';
 
 function App() {
   const [pythonCode, setPythonCode] = useState('');
