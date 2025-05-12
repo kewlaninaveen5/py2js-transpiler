@@ -1,0 +1,30 @@
+.dropzone {
+    border: 2px dashed #aaa;
+    padding: 2rem;
+    text-align: center;
+    border-radius: 10px;
+    background-color: #f9f9f9;
+    transition: background-color 0.3s;
+    cursor: pointer;
+  }
+  
+  .dropzone:hover {
+    background-color: #f1f1f1;
+  }
+  
+  .upload-button {
+    display: inline-block;
+    margin-top: 1rem;
+    padding: 0.5rem 1rem;
+    background-color: #007bff;
+    color: white;
+    border-radius: 5px;
+    cursor: pointer;
+    font-weight: 500;
+    text-decoration: none;
+  }
+  
+  .upload-button:hover {
+    background-color: #0056b3;
+  }
+  

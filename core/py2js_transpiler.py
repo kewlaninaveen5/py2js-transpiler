@@ -1,5 +1,6 @@
 import ast
 import os
+import sys
 from loop_translators import loopHandlers
 from operator_maps import (
 COMPARE_OP_MAP,
@@ -312,16 +313,23 @@ class PyToJsTranspiler(ast.NodeVisitor, loopHandlers):
 
 # Example usage
 if __name__ == "__main__":
-    fileName = "test1"
-    test_path = os.path.join(os.path.dirname(__file__),"..", "tests", f"{fileName}.py")
-    with open(test_path, "r") as f:
-        python_code = f.read()
     transpiler = PyToJsTranspiler()
+    print(sys.argv)
+    # if len(sys.argv) > 1:
+    python_code = sys.stdin.read()
     js_code = transpiler.transpile(python_code)
+    print(js_code)
+    # else:
+    #     fileName = "test1"
+    #     test_path = os.path.join(os.path.dirname(__file__),"..", "tests", f"{fileName}.py")
+    #     with open(test_path, "r") as f:
+    #         python_code = f.read()
 
-    output_dir = os.path.join(os.path.dirname(__file__), "..", "output")
-    os.makedirs(output_dir, exist_ok=True)  # Create the folder if it doesn't exist
-    output_path = os.path.join(output_dir, f"{fileName}Output.js")
-    with open(output_path, "w") as f:
-        f.write(js_code)
-        print("✅ Transpilation complete. Output saved to output.js", )
+    #     js_code = transpiler.transpile(python_code)
+
+    #     output_dir = os.path.join(os.path.dirname(__file__), "..", "output")
+    #     os.makedirs(output_dir, exist_ok=True)  # Create the folder if it doesn't exist
+    #     output_path = os.path.join(output_dir, f"{fileName}Output.js")
+    #     with open(output_path, "w") as f:
+    #         f.write(js_code)
+    #         print("✅ Transpilation complete. Output saved to output.js")

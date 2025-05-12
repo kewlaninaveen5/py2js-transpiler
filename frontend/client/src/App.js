@@ -1,5 +1,6 @@
 import React, { useState } from 'react';
 import axios from 'axios';
+import FileUploader from './FileUploader';
 
 function App() {
   const [pythonCode, setPythonCode] = useState('');
@@ -15,10 +16,14 @@ function App() {
     setLoading(true);
     setError(null);
     try {
-      const response = await axios.post('http://localhost:5000/api/convert', { code: pythonCode });
-      setJsCode(response.data.jsCode);
-    } catch (error) {
-      setError('Error converting Python to JavaScript');
+      const response = await axios.post("http://localhost:5001/api/convert", {
+        code: pythonCode,
+      });
+
+      setJsCode(response.data.jsCode || '');
+    } catch (err) {
+      console.error("Error:", err);
+      setError("Failed to transpile code");
     } finally {
       setLoading(false);
     }
@@ -37,6 +42,7 @@ function App() {
       ></textarea>
 
       <div>
+        <FileUploader onFileRead={setPythonCode} />
         <button onClick={handleConvert} disabled={loading}>
           {loading ? 'Converting...' : 'Convert to JavaScript'}
         </button>
@@ -55,4 +61,3 @@ function App() {
 }
 
 export default App;
- 
