@@ -22,6 +22,7 @@ function App() {
       setJsCode(response.data.jsCode || '');
     } catch (err) {
       console.error("Error:", err);
+      setJsCode("//An Error occured while transpiling your code.");
       setError("Failed to transpile code");
     } finally {
       setLoading(false);
