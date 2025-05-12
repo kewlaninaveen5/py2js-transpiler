@@ -16,7 +16,7 @@ function App() {
     setError(null);
     try {
       const response = await axios.post("http://localhost:5001/api/convert", {
-        code: pythonCode,
+        code: pythonCode == '' ? 'print("Hello World")' : pythonCode ,
       });
 
       setJsCode(response.data.jsCode || '');
@@ -32,11 +32,12 @@ function App() {
     <div className="App">
       <div className="left-panel">
         <h1>Python to JavaScript Transpiler</h1>
+        <h5>Python code goes here....</h5>
         <Editor
           defaultLanguage="python"
           theme= "light"
           options = {{
-            placeholder: `Enter Python code here... \n Eg: print("Hello World")`,
+            placeholder: `print("Hello World") \n (Press Convert to RUN this) `,
             minimap: { enabled: false },
             fontSize: 14,
           }}
