@@ -44,7 +44,7 @@ class PyToJsTranspiler(ast.NodeVisitor, loopHandlers):
         return f"({ f" {operation} ".join(f"({v})" for v in values)})"
     
     def visit_BinOp(self,node):
-        print(ast.dump(node))
+        # print(ast.dump(node))
         if isinstance(node.left, ast.List) and isinstance(node.op, ast.Mult):
             count = self.visit(node.right)
             val = self.visit(node.left.elts[0])
@@ -208,14 +208,14 @@ class PyToJsTranspiler(ast.NodeVisitor, loopHandlers):
     #     return f"Array.from(" + "{" + f"length: {length}" + "}" + f", (_, {target}) => {stmt})"
     
     def visit_ListComp(self, node):
-        print(ast.dump(node))
+        # print(ast.dump(node))
         # Handle the expression inside the list comprehension
         expression = self.visit(node.elt)
         # Handle the iterable
         iter = self.visit(node.generators[0])
-        print(iter)
-        print("lis:", iter)
-        print(expression)
+        # print(iter)
+        # print("lis:", iter)
+        # print(expression)
         # Return the equivalent JavaScript code using map
         return f"{iter[1]}.map(({iter[0]}) => {expression})"
 
@@ -276,7 +276,7 @@ class PyToJsTranspiler(ast.NodeVisitor, loopHandlers):
 
     # ?try catch blockssss
     def visit_Try(self, node):
-        print("try node: ", ast.dump(node.handlers[0]))
+        # print("try node: ", ast.dump(node.handlers[0]))
         self.emit("try {")
         self.indent_level += 1
         for stmt in node.body:
@@ -292,7 +292,7 @@ class PyToJsTranspiler(ast.NodeVisitor, loopHandlers):
             self.emit(f"catch ({exception_name}) " + "{")
             self.indent_level += 1
             for stmt in handler.body:
-                print("stmt: ", ast.dump(stmt))
+                # print("stmt: ", ast.dump(stmt))
                 self.visit(stmt)
             self.indent_level -= 1
             self.emit("}")
@@ -314,22 +314,20 @@ class PyToJsTranspiler(ast.NodeVisitor, loopHandlers):
 # Example usage
 if __name__ == "__main__":
     transpiler = PyToJsTranspiler()
-    print(sys.argv)
-    # if len(sys.argv) > 1:
+
     python_code = sys.stdin.read()
     js_code = transpiler.transpile(python_code)
     print(js_code)
-    # else:
-    #     fileName = "test1"
-    #     test_path = os.path.join(os.path.dirname(__file__),"..", "tests", f"{fileName}.py")
-    #     with open(test_path, "r") as f:
-    #         python_code = f.read()
 
-    #     js_code = transpiler.transpile(python_code)
-
-    #     output_dir = os.path.join(os.path.dirname(__file__), "..", "output")
-    #     os.makedirs(output_dir, exist_ok=True)  # Create the folder if it doesn't exist
-    #     output_path = os.path.join(output_dir, f"{fileName}Output.js")
-    #     with open(output_path, "w") as f:
-    #         f.write(js_code)
-    #         print("✅ Transpilation complete. Output saved to output.js")
+    # fileName = "test1"
+    # test_path = os.path.join(os.path.dirname(__file__),"..", "tests", f"{fileName}.py")
+    # with open(test_path, "r") as f:
+    #     python_code = f.read()
+    # js_code = transpiler.transpile(python_code)
+    # print(js_code)
+    # output_dir = os.path.join(os.path.dirname(__file__), "..", "output")
+    # os.makedirs(output_dir, exist_ok=True)  # Create the folder if it doesn't exist
+    # output_path = os.path.join(output_dir, f"{fileName}Output.js")
+    # with open(output_path, "w") as f:
+    #     f.write(js_code)
+    #     print("✅ Transpilation complete. Output saved to output.js")

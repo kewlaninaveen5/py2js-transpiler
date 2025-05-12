@@ -17,57 +17,53 @@ const PORT = 5001;
 app.use(bodyParser.json())
 
 const pythonFilePath = '/Users/naveenkewlani/Desktop/webProjects/py2js-transpiler/core/py2js_transpiler.py';
+const pyshell = new PythonShell(pythonFilePath,{
+    mode: 'text',
+    pythonPath: 'python3',
+    // scriptPath: pythonFilePath
+});
+let result = ''; // accumulate all lines
 
-app.post("/api/convert", (req, res) => {
-    const pythonCode = req.body.code
-    // console.log("[server.js Line 22] req.body.code: ", pythonCode)
-    let options = {
-        mode: 'text',
-        pythonPath: 'python3',
-        scriptPath: path.dirname(pythonFilePath),
-        // args: [pythonCode],
-        stderrParser: (line) => console.error("PYTHON STDERR:", line),
-        timeout: 10 // in seconds
-    };
+// app.post("/api/convert", (req, res) => {        // python working: VK
+//     const pythonCode = req.body.code
+//     let options = {
+//         mode: 'text',
+//         pythonPath: 'python3',
+//         pythonOptions: ['-u'],
+//         scriptPath: path.dirname(pythonFilePath),
+//         stderrParser: (line) => console.error("PYTHON STDERR:", line),
+//         timeout: 10 // in seconds
+//     };
+//     console.log("vk: ", pythonCode);
+//     PythonShell.runString(String(pythonCode)).then(message => {
+//         console.log('vkkkkk finished');
+//         console.log(message);
+//         res.json({ jsCode: message });
+//     });
 
-    const pyshell = new PythonShell('py2js_transpiler.py', options);
+// });
 
-    let result = '';
-    pyshell.on('message', (message) => {
+app.post("/api/convert", (req, res) => {  
+    const pythonCode = req.body.code          //python file working -Naveen
+    console.log(pythonCode)
+    pyshell.send(pythonCode);
+
+    pyshell.on('message', function (message) {
+        // received a message sent from the Python script (a simple "print" statement)
         result += message + '\n';
+        console.log("message: ", message);
+        // res.json({ jsCode: message });
     });
-    pyshell.on('stderr', (stderr) => {
-        console.error('PYTHON STDERR:', stderr);
-    });
-
-    pyshell.on('close', () => {
-        console.log('Transpiled result:', result);
+    
+    // end the input stream and allow the process to exit
+    pyshell.end(function (err, code, signal) {
+        if (err) throw err;
+        console.log(result)
         res.json({ jsCode: result });
+        console.log('The exit code was: ' + code);
+        console.log('The exit signal was: ' + signal);
+        console.log('finished');
     });
-
-    pyshell.on('error', (err) => {
-        console.error('PythonShell Error:', err);
-        res.status(500).send({ error: 'Error transpiling code' });
-    });
-
-    pyshell.send(pythonCode).end();
-
-    // console.log("outside shell")
-    //     PythonShell.run('py2js_transpiler.py',options, (err, result) => {
-    //         console.log("inside shell")
-    //         if(err) {
-    //             console.error("PythonShell Error:", err);
-    //             res.status(500).send({error: "Error transpiling code"});
-
-    //         } else {
-    //             console.log("Transpiled result:", result);
-    //             res.json({jsCode: result.join('\n')}); // Return the transpiled JavaScript code
-
-    //         }
-    //         console.log("outside python shelllllllllllllllllllllll")
-    //     })
-
-    console.log("outside python")
 })
 
 app.listen(PORT, () => {

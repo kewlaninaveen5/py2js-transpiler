@@ -3,7 +3,7 @@ import axios from 'axios';
 import FileUploader from './FileUploader';
 
 function App() {
-  const [pythonCode, setPythonCode] = useState('');
+  const [pythonCode, setPythonCode] = useState('print("Hello World")');
   const [jsCode, setJsCode] = useState('');
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState(null);
