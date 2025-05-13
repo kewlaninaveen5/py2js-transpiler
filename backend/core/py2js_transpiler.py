@@ -194,7 +194,7 @@ class PyToJsTranspiler(ast.NodeVisitor, loopHandlers):
         array = []
         for item in node.elts:
             array.append(self.visit(item))
-        return f"[{", ".join(array)}]"
+        return f"[{', '.join(array)}]"
     
     def visit_comprehension(self, node):
         target = self.visit(node.target)
@@ -277,7 +277,7 @@ class PyToJsTranspiler(ast.NodeVisitor, loopHandlers):
         packages = []
         for alias in node.names:
             packages.append(alias.name)
-        self.emit("import {" + f"{ ", ".join(packages) }" + "} from" + f" '{module}';")
+        self.emit("import {" + f"{ ', '.join(packages) }" + "} from" + f" '{module}';")
 
     # ?try catch blockssss
     def visit_Try(self, node):

@@ -32,6 +32,7 @@ function App() {
       
     } catch (err) {
       console.error("Error:", err);
+      // alert("This might be an inactivity error due to free server. Please try after 1 minute.")
       setJsCode("//An Error occured while transpiling your code.");
       setError("Transpilation error: " + err.message);
       
