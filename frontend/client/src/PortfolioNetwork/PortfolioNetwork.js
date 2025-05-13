@@ -13,8 +13,8 @@ const Network = () => {
 
     const list = Object.entries(redirects).map((keyValueArray, key) => {
         const baseURL = window.location.origin
-        return <div key = {key} className={` ${baseURL === keyValueArray[3] ? "not-allowed" : "redirect" }`}>
-            <a rel="noreferrer" className={` ${baseURL === keyValueArray[3] ? "not-allowed" : "redirect" }`} href={keyValueArray[3]} target="_blank">Visit {keyValueArray[0]}</a></div> 
+        return <div key = {key} className={` ${baseURL === keyValueArray[1] ? "not-allowed" : "redirect" }`}>
+            <a rel="noreferrer" className={` ${baseURL === keyValueArray[1] ? "not-allowed" : "redirect" }`} href={keyValueArray[1]} target="_blank">Visit {keyValueArray[0]}</a></div> 
     })
 
 
