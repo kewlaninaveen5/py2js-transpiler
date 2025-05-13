@@ -19,7 +19,6 @@ class PyToJsTranspiler(ast.NodeVisitor, loopHandlers):
         self.declared_vars = set()
 
     def emit(self,line):
-        print("line: ", line)
         indent = "    "*self.indent_level
         if line:
             self.output.append(indent + line)
@@ -52,7 +51,6 @@ class PyToJsTranspiler(ast.NodeVisitor, loopHandlers):
     # f"({ f" {operation} ".join(f"({v})" for v in values)})"
     
     def visit_BinOp(self,node):
-        # print(ast.dump(node))
         if isinstance(node.left, ast.List) and isinstance(node.op, ast.Mult):
             count = self.visit(node.right)
             val = self.visit(node.left.elts[0])
@@ -108,7 +106,6 @@ class PyToJsTranspiler(ast.NodeVisitor, loopHandlers):
         return f"{target} {op} {value}"
 
     def visit_Expr(self, node):
-        # Handle expression statements (like print)
         expr = self.visit(node.value)
         self.emit(expr + ";")
 
@@ -226,18 +223,13 @@ class PyToJsTranspiler(ast.NodeVisitor, loopHandlers):
     # def visit_ListComp(self, node):
     #     stmt = self.visit(node.elt)
     #     target, length = self.visit(node.generators[0])
-    #     print("length: ", length)
     #     return f"Array.from(" + "{" + f"length: {length}" + "}" + f", (_, {target}) => {stmt})"
     
     def visit_ListComp(self, node):
-        # print(ast.dump(node))
         # Handle the expression inside the list comprehension
         expression = self.visit(node.elt)
         # Handle the iterable
         iter = self.visit(node.generators[0])
-        # print(iter)
-        # print("lis:", iter)
-        # print(expression)
         # Return the equivalent JavaScript code using map
         return f"{iter[1]}.map(({iter[0]}) => {expression})"
 
@@ -298,7 +290,6 @@ class PyToJsTranspiler(ast.NodeVisitor, loopHandlers):
 
     # ?try catch blockssss
     def visit_Try(self, node):
-        # print("try node: ", ast.dump(node.handlers[0]))
         self.emit("try {")
         self.indent_level += 1
         for stmt in node.body:
@@ -314,7 +305,6 @@ class PyToJsTranspiler(ast.NodeVisitor, loopHandlers):
             self.emit(f"catch ({exception_name}) " + "{")
             self.indent_level += 1
             for stmt in handler.body:
-                # print("stmt: ", ast.dump(stmt))
                 self.visit(stmt)
             self.indent_level -= 1
             self.emit("}")
