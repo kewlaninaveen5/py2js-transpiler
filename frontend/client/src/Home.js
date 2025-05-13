@@ -47,7 +47,7 @@ function Home() {
       console.error("Error:", err);
       // alert("This might be an inactivity error due to free server. Please try after 1 minute.")
       setJsCode("//An Error occured while transpiling your code.");
-      if (err.response && err.response.data.error.type == "SyntaxError") {
+      if (err.response && err.response.data.error.type === "SyntaxError") {
         setError("Transpilation error: " + err.response.data.error.message);
       } else if (err.response) {
         setError("Transpilation error: " + err.response.data.error.message);
