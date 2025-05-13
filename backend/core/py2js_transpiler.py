@@ -42,7 +42,9 @@ class PyToJsTranspiler(ast.NodeVisitor, loopHandlers):
     def visit_BoolOp(self,node):
         operation = BOOL_OP_MAP[type(node.op)]
         values = [self.visit(v) for v in node.values]
-        return f"({ f" {operation} ".join(f"({v})" for v in values)})"
+        return f"({f' {operation} '.join(f'({v})' for v in values)})"
+    
+    # f"({ f" {operation} ".join(f"({v})" for v in values)})"
     
     def visit_BinOp(self,node):
         # print(ast.dump(node))
