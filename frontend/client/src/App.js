@@ -23,12 +23,18 @@ function App() {
       const response = await axios.post(`${BACKEND_URL}/api/convert`, {
         code: pythonCode === '' ? 'print("Hello World")' : pythonCode,
       });
-
-      setJsCode(response.data.jsCode || '');
+      const { jsCode } = response.data;
+      if (jsCode.startsWith('{') && jsCode.includes('"error":')) {
+        const errObj = JSON.parse(jsCode);
+        throw new Error(errObj.details);
+      }
+      setJsCode(jsCode || '');
+      
     } catch (err) {
       console.error("Error:", err);
       setJsCode("//An Error occured while transpiling your code.");
-      setError("Failed to transpile code");
+      setError("Transpilation error: " + err.message);
+      
     } finally {
       setLoading(false);
     }

@@ -37,22 +37,40 @@ app.post("/api/convert", (req, res) => {
         const pyshell = new PythonShell(pythonFilePath, {
             mode: 'text',
             pythonPath: 'python3',
+            // stdio: ['pipe', 'pipe', 'pipe'],
+            pythonOptions: ['-u'],
         });
         let result = '';
+        let errorOutput = '';
 
-        pyshell.send(pythonCode);
+
+        
 
         pyshell.on('message', function (message) {
             result += message + '\n';
-        });
+        }); 
 
-        pyshell.on('error', function (pyErr) {
-            console.error("PythonShell error:", pyErr);
-        });
+        pyshell.on('stderr', function (stderr) {
+            console.error("stderr from PythonShell:", stderr);
+            errorOutput += stderr + '\n';
+          });
+        pyshell.on('error', function (err) {
+            console.error("PythonShell internal error:", err);
+            errorOutput += err.message + '\n';
+          });
+
+        pyshell.send(pythonCode);
+
 
         pyshell.end(function (err, code, signal) {
-            if (err) return res.status(500).json({ error: err });;
+            if (err) {
+                console.error('PythonShell error:', err);
+                console.error('Stderr output:', errorOutput);
+                return res.status(500).json({ error: errorOutput || 'An Error occured during code conversion' });;
+
+            } 
             console.log('Exit code:', code);
+            console.log('Exit code:', errorOutput);
             console.log('Exit signal:', signal);
             res.json({ jsCode: result });
         });

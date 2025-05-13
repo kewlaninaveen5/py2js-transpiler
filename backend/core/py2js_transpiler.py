@@ -1,3 +1,4 @@
+import traceback
 import ast
 import os
 import sys
@@ -101,37 +102,39 @@ class PyToJsTranspiler(ast.NodeVisitor, loopHandlers):
         self.emit(f"return {stmt};")
     
     def visit_Call(self, node):
-        if isinstance(node.func, ast.Name) and node.func.id == "print":
-            args = ", ".join(self.visit(arg) for arg in node.args)
-            return f"console.log({args})"
+        try:
+            if isinstance(node.func, ast.Name) and node.func.id == "print":
+                args = ", ".join(self.visit(arg) for arg in node.args)
+                return f"console.log({args})"
         
-        elif isinstance(node.func, ast.Name) and node.func.id == "range":
-            args = node.args
-            def get_val(arg):
-                val = self.eval_if_constant(arg)
-                return int(val) if val is not None else self.visit(arg)
-            if len(args) == 1:
-                start = 0
-                end = get_val(args[0])
-                step = 1
-            elif len(args) == 2:
-                start = get_val(args[0])
-                end = get_val(args[1])
-                step = 1
-            elif len(args) == 3:
-                start = get_val(args[0])
-                end = get_val(args[1])
-                step = get_val(args[2])
+        
+            elif isinstance(node.func, ast.Name) and node.func.id == "range":
+                args = node.args
+                def get_val(arg):
+                    val = self.eval_if_constant(arg)
+                    return int(val) if val is not None else self.visit(arg)
+                if len(args) == 1:
+                    start = 0
+                    end = get_val(args[0])
+                    step = 1
+                elif len(args) == 2:
+                    start = get_val(args[0])
+                    end = get_val(args[1])
+                    step = 1
+                elif len(args) == 3:
+                    start = get_val(args[0])
+                    end = get_val(args[1])
+                    step = get_val(args[2])
+                else:
+                    return "/* Unsupported range usage */"
+                return [start, end, step]
             else:
-                return "/* Unsupported range usage */"
-            return [start, end, step]
-        else:
-            funcName = node.func.id
-            arguments = [self.visit(arg) for arg in node.args]
-            arguments_str = ", ".join(arg for arg in arguments)
-            return f"{funcName}({arguments_str})"
-
-        return "/* Unsupported function call */"
+                funcName = node.func.id
+                arguments = [self.visit(arg) for arg in node.args]
+                arguments_str = ", ".join(arg for arg in arguments)
+                return f"{funcName}({arguments_str})"
+        except Exception as e:
+            return f'/* Error transpiling call {node.func.id} function: {e} */'
     
     # Conditional statements is below
 
@@ -314,10 +317,13 @@ class PyToJsTranspiler(ast.NodeVisitor, loopHandlers):
 # Example usage
 if __name__ == "__main__":
     transpiler = PyToJsTranspiler()
-
-    python_code = sys.stdin.read()
-    js_code = transpiler.transpile(python_code)
-    print(js_code)
+    try:
+        python_code = sys.stdin.read()
+        js_code = transpiler.transpile(python_code)
+        print(js_code)
+    except Exception as e:
+        sys.stderr.write(traceback.format_exc())  # ✅ Important
+        sys.exit(1)
 
     # fileName = "test1"
     # test_path = os.path.join(os.path.dirname(__file__),"..", "tests", f"{fileName}.py")
