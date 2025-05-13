@@ -1,7 +1,6 @@
 
 import React from 'react';
 import './Docs.css';
-import { Editor } from '@monaco-editor/react';
 
 const Docs = () => {
     return (
