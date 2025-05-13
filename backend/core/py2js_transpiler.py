@@ -336,23 +336,23 @@ class PyToJsTranspiler(ast.NodeVisitor, loopHandlers):
 # Example usage
 if __name__ == "__main__":
     transpiler = PyToJsTranspiler()
-    # try:
-    #     python_code = sys.stdin.read()
-    #     js_code = transpiler.transpile(python_code)
-    #     print(js_code)
-    # except Exception as e:
-    #     sys.stderr.write(traceback.format_exc())  # ✅ Important
-    #     sys.exit(1)
+    try:
+        python_code = sys.stdin.read()
+        js_code = transpiler.transpile(python_code)
+        print(js_code)
+    except Exception as e:
+        sys.stderr.write(traceback.format_exc())  # ✅ Important
+        sys.exit(1)
 
-    fileName = "test"
-    test_path = os.path.join(os.path.dirname(__file__),"..","..", "tests", f"{fileName}.py")
-    with open(test_path, "r") as f:
-        python_code = f.read()
-    js_code = transpiler.transpile(python_code)
-    print(js_code)
-    output_dir = os.path.join(os.path.dirname(__file__), "..","..", "output")
-    os.makedirs(output_dir, exist_ok=True)  # Create the folder if it doesn't exist
-    output_path = os.path.join(output_dir, f"{fileName}Output.js")
-    with open(output_path, "w") as f:
-        f.write(js_code)
-        print("✅ Transpilation complete. Output saved to output.js")
+    # fileName = "test"
+    # test_path = os.path.join(os.path.dirname(__file__),"..","..", "tests", f"{fileName}.py")
+    # with open(test_path, "r") as f:
+    #     python_code = f.read()
+    # js_code = transpiler.transpile(python_code)
+    # print(js_code)
+    # output_dir = os.path.join(os.path.dirname(__file__), "..","..", "output")
+    # os.makedirs(output_dir, exist_ok=True)  # Create the folder if it doesn't exist
+    # output_path = os.path.join(output_dir, f"{fileName}Output.js")
+    # with open(output_path, "w") as f:
+    #     f.write(js_code)
+    #     print("✅ Transpilation complete. Output saved to output.js")

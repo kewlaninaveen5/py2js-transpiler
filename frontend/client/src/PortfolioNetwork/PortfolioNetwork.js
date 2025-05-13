@@ -1,6 +1,5 @@
 import React from "react";
 import './PortfolioNetwork.css'
-// import profilePhoto from 
 
 const Network = () => {
 

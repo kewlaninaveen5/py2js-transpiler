@@ -12,8 +12,6 @@ function Home() {
   const [jsCode, setJsCode] = useState('');
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState(null);
-  const [image, setImage] = useState(null);
-
 
   const copyToClipboard = () => {
     if (!jsCode) return;
