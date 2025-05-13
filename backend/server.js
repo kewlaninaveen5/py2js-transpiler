@@ -11,14 +11,15 @@ const app = express();
 const allowedOrigins = [
     'http://localhost:3000',
     'https://py2jstranspiler.netlify.app',
-  ];
+];
 app.use(cors({
     origin: function (origin, callback) {
         if (!origin || allowedOrigins.includes(origin)) {
-          callback(null, true);
+            callback(null, true);
         } else {
-          callback(new Error('Not allowed by CORS'));
-        }},
+            callback(new Error('Not allowed by CORS'));
+        }
+    },
     optionsSuccessStatus: 200,
     methods: ['GET', 'POST'],
     credentials: true
@@ -44,20 +45,20 @@ app.post("/api/convert", (req, res) => {
         let errorOutput = '';
 
 
-        
+
 
         pyshell.on('message', function (message) {
             result += message + '\n';
-        }); 
+        });
 
         pyshell.on('stderr', function (stderr) {
             console.error("stderr from PythonShell:", stderr);
             errorOutput += stderr + '\n';
-          });
+        });
         pyshell.on('error', function (err) {
             console.error("PythonShell internal error:", err);
             errorOutput += err.message + '\n';
-          });
+        });
 
         pyshell.send(pythonCode);
 
@@ -66,9 +67,32 @@ app.post("/api/convert", (req, res) => {
             if (err) {
                 console.error('PythonShell error:', err);
                 console.error('Stderr output:', errorOutput);
-                return res.status(500).json({ error: errorOutput || 'An Error occured during code conversion' });;
+                const match = err.traceback?.match(/File "<unknown>", line (\d+)\n\s+(.*)\n\s+\^.*\nSyntaxError: (.*)/);
 
-            } 
+                if (match) {
+                    const line = parseInt(match[1], 10);
+                    const codeLine = match[2];
+                    const message = match[3];
+
+                    return res.status(400).json({
+                        error: {
+                            type: "SyntaxError",
+                            message,
+                            line,
+                            codeLine
+                        }
+                    });
+                }
+
+                return res.status(500).json({
+                    error: {
+                        type: "InternalError",
+                        message: err.message || "An unknown error occurred in the Python transpiler."
+                    }
+                });
+                // return res.status(500).json({ error: errorOutput || 'An Error occured during code conversion' });;
+
+            }
             console.log('Exit code:', code);
             console.log('Exit code:', errorOutput);
             console.log('Exit signal:', signal);
@@ -77,9 +101,10 @@ app.post("/api/convert", (req, res) => {
     } catch (err) {
         console.log(err);
         res.status(500).json(
-            { error: "Server error occurred. Please try again. Please check the python code once again",
-                jsCode: '' 
-             });
+            {
+                error: "Server error occurred. Please try again. Please check the python code once again",
+                jsCode: ''
+            });
     }
 
 

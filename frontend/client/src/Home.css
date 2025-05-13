@@ -57,7 +57,7 @@ h1 {
 .button-row {
   display: flex;
   align-items: center;
-  justify-content: space-between;
+  /* justify-content: space-between; */
   margin: 15px 0;
   gap: 10px;
 }

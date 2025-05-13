@@ -1,0 +1,89 @@
+.network-container {
+    margin: auto;
+    text-align: center;
+    border: none;
+    padding: 6px;
+    font-family: "Roboto";
+    font-size: 20px;
+    background-color: #fff;
+    color: #000;
+    cursor: auto;
+    margin: 10px;
+    width: 500px;
+    max-width: 500px;
+    /* box-shadow: black 1px 1px 15px; */
+    border-radius: 8px;
+    transition: 300ms;
+}
+
+
+
+.redirect {
+    text-align: left;
+    margin: auto;
+    border: none;
+    padding: none;
+    font-family: "Roboto";
+    font-size: 14px;
+    text-wrap: nowrap;
+    background-color: #fff;
+    color: #2a6170;
+    cursor: pointer;
+    text-decoration: none;
+    margin: 8px;
+    max-width: 500px;
+    border-radius: 8px;
+    transition: 300ms;
+}
+
+.redirect:hover {
+    text-align: left;
+    margin: auto;
+    border: none;
+    font-family: "Roboto";
+    font-size: 14px;
+    text-wrap: nowrap;
+    background-color: #fff;
+    color: #2b6cb0;
+    cursor: pointer;
+    text-decoration: none;
+    margin: 8px;
+    margin-left: 12px;
+    margin-right: 4px;
+    max-width: 500px;
+    border-radius: 8px;
+    transition: 300ms;
+}
+
+.not-allowed {
+    text-align: left;
+    margin: auto;
+    border: none;
+    font-family: "Roboto";
+    font-size: 14px;
+    text-wrap: nowrap;
+    text-decoration: none;
+    margin: 8px;
+    margin-left: 12px;
+    margin-right: 4px;
+    max-width: 500px;
+    border-radius: 8px;
+    transition: 300ms;
+    cursor: not-allowed;
+    color: darkgray;
+    /* background-color: gray; */
+}
+.flex {
+    display: flex;
+}
+.profile-image {
+    width: 120px;
+    border-radius: 30px;
+    margin-left: 30px;
+}
+.skills {
+    font-size: 14px;
+}
+.left-align{
+    text-align: left;
+}

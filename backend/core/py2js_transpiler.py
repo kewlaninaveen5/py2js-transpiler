@@ -1,3 +1,4 @@
+import inspect
 import traceback
 import ast
 import os
@@ -18,8 +19,12 @@ class PyToJsTranspiler(ast.NodeVisitor, loopHandlers):
         self.declared_vars = set()
 
     def emit(self,line):
+        print("line: ", line)
         indent = "    "*self.indent_level
-        self.output.append(indent + line)
+        if line:
+            self.output.append(indent + line)
+        else:
+            self.output.append(indent + "//this line was ommitted due to error in reading the statement")
 
     def eval_if_constant(self, node):
         try:
@@ -75,17 +80,25 @@ class PyToJsTranspiler(ast.NodeVisitor, loopHandlers):
         return(f"{target} {operation} {value}")
     
     def visit_Assign(self, node):
-        # Assume single assignment target
-        target = self.visit(node.targets[0])
-        value = self.visit(node.value)
-        if target not in self.declared_vars:
-            self.declared_vars.add(target)
-            if isinstance(node.value, ast.Constant):
-                self.emit(f"let {target} = {value};")
+        try:
+            target = node.targets[0]
+            if isinstance(target, ast.Subscript):
+                target_str = self.visit(target)
+                value = self.visit(node.value)
+                self.emit(f"{target_str} = {value};")
             else:
-                self.emit(f"const {target} = {value};")
-        else:
-            self.emit(f"{target} = {value};")
+                target = self.visit(node.targets[0])
+                value = self.visit(node.value)
+                if target not in self.declared_vars:
+                    self.declared_vars.add(target)
+                    if isinstance(node.value, ast.Constant):
+                        self.emit(f"let {target} = {value};")
+                    else:
+                        self.emit(f"const {target} = {value};")
+                else:
+                    self.emit(f"{target} = {value};")
+        except Exception as e:
+            self.emit(f'/* Error transpiling call {inspect.currentframe().f_code.co_name} Error: {e} */')
 
     #augAssign
     def visit_AugAssign(self, node):
@@ -106,7 +119,7 @@ class PyToJsTranspiler(ast.NodeVisitor, loopHandlers):
     def visit_Call(self, node):
         try:
             if isinstance(node.func, ast.Name) and node.func.id == "print":
-                args = ", ".join(self.visit(arg) for arg in node.args)
+                args = " + ".join(self.visit(arg) for arg in node.args)
                 return f"console.log({args})"
         
         
@@ -139,7 +152,6 @@ class PyToJsTranspiler(ast.NodeVisitor, loopHandlers):
             return f'/* Error transpiling call {node.func.id} function: {e} */'
     
     # Conditional statements is below
-
     def visit_If(self,node, is_elif = False):
         condition = self.visit(node.test)
         if is_elif:
@@ -171,30 +183,35 @@ class PyToJsTranspiler(ast.NodeVisitor, loopHandlers):
     # Definining custom Functions: 
 
     def visit_FunctionDef(self, node):
-        functionName = node.name
-        arguments = [arg.arg for arg in node.args.args]
-        if node.args.defaults:
-            defaults = [self.visit(default) for default in node.args.defaults]
-            N = len(arguments)-1
-            while defaults:
-                arguments[N] = " = ".join([arguments[N], defaults.pop(len(defaults)-1)])
-                N -= 1
-        arguments_strings = ', '.join(arg for arg in arguments)
+        try: 
+            functionName = node.name
+            arguments = [arg.arg for arg in node.args.args]
+            if node.args.defaults:
+                defaults = [self.visit(default) for default in node.args.defaults]
+                N = len(arguments)-1
+                while defaults:
+                    arguments[N] = " = ".join([arguments[N], defaults.pop(len(defaults)-1)])
+                    N -= 1
+            arguments_strings = ', '.join(arg for arg in arguments)
 
-        self.emit(f"const {functionName} = ({arguments_strings})=>" + "{")
-        self.indent_level += 1
-        for stmt in node.body:
-            self.visit(stmt)
-        self.indent_level -= 1
-        self.emit("}")
+            self.emit(f"const {functionName} = ({arguments_strings}) => " + "{")
+            self.indent_level += 1
+            for stmt in node.body:
+                self.visit(stmt)
+            self.indent_level -= 1
+            self.emit("}")
+        except Exception as e:
+            self.emit(f'/* Error transpiling call {inspect.currentframe().f_code.co_name} Error: {e} */')
+        
 
         #  List Comprehension: 
 
     def visit_List(self,node):
-        array = []
-        for item in node.elts:
-            array.append(self.visit(item))
-        return f"[{', '.join(array)}]"
+        try: 
+            array = [self.visit(el) for el in node.elts]
+            return f"[{', '.join(array)}]"
+        except Exception as e:
+            return(f'/* Error transpiling call {inspect.currentframe().f_code.co_name} Error: {e} */')
     
     def visit_comprehension(self, node):
         target = self.visit(node.target)
@@ -319,23 +336,23 @@ class PyToJsTranspiler(ast.NodeVisitor, loopHandlers):
 # Example usage
 if __name__ == "__main__":
     transpiler = PyToJsTranspiler()
-    try:
-        python_code = sys.stdin.read()
-        js_code = transpiler.transpile(python_code)
-        print(js_code)
-    except Exception as e:
-        sys.stderr.write(traceback.format_exc())  # ✅ Important
-        sys.exit(1)
+    # try:
+    #     python_code = sys.stdin.read()
+    #     js_code = transpiler.transpile(python_code)
+    #     print(js_code)
+    # except Exception as e:
+    #     sys.stderr.write(traceback.format_exc())  # ✅ Important
+    #     sys.exit(1)
 
-    # fileName = "test1"
-    # test_path = os.path.join(os.path.dirname(__file__),"..", "tests", f"{fileName}.py")
-    # with open(test_path, "r") as f:
-    #     python_code = f.read()
-    # js_code = transpiler.transpile(python_code)
-    # print(js_code)
-    # output_dir = os.path.join(os.path.dirname(__file__), "..", "output")
-    # os.makedirs(output_dir, exist_ok=True)  # Create the folder if it doesn't exist
-    # output_path = os.path.join(output_dir, f"{fileName}Output.js")
-    # with open(output_path, "w") as f:
-    #     f.write(js_code)
-    #     print("✅ Transpilation complete. Output saved to output.js")
+    fileName = "test"
+    test_path = os.path.join(os.path.dirname(__file__),"..","..", "tests", f"{fileName}.py")
+    with open(test_path, "r") as f:
+        python_code = f.read()
+    js_code = transpiler.transpile(python_code)
+    print(js_code)
+    output_dir = os.path.join(os.path.dirname(__file__), "..","..", "output")
+    os.makedirs(output_dir, exist_ok=True)  # Create the folder if it doesn't exist
+    output_path = os.path.join(output_dir, f"{fileName}Output.js")
+    with open(output_path, "w") as f:
+        f.write(js_code)
+        print("✅ Transpilation complete. Output saved to output.js")

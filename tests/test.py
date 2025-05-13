@@ -1,20 +1,12 @@
-# # import math, notmath
-# # from math import pi, sin
-
-# try:
-#     x = 10 / 0
-# except ZeroDivisionError:
-#     print("Cannot divide by zero.")
-
-
-# # l = [1,2,3,4]
-# # x = l[0:2]
-# # l[2] = 15
-
-# # data = {"name": "Alice", "age": 25}
-# # print(x)
-
-nums = [1, 2, 3, 4, 5] 
-squares = [n*n for n in nums]
-
-
+# def f(a, b="1", c=2):
+#     print(a, b, c)
+# f(14)
+# nums = [1, 2, 3]
+# print(nums[0])
+# nums[1] = 10
+# print(nums)
+for i in range(5):
+    print(i)
+    
+for j in range(1, 10, 2):
+    print(j)

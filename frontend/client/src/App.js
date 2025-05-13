@@ -1,107 +1,19 @@
 import React, { useState } from 'react';
 import axios from 'axios';
-import './App.css'
-import FileUploader from './FileUploader';
-import Editor from '@monaco-editor/react';
+import { BrowserRouter as Router, Routes, Route } from "react-router-dom";
+import Home from './Home';
+import Docs from './Docs';
 
 function App() {
-  const [pythonCode, setPythonCode] = useState('');
-  const [jsCode, setJsCode] = useState('');
-  const [loading, setLoading] = useState(false);
-  const [error, setError] = useState(null);
 
+  return (    
+  <Router>
+    <Routes>
+      <Route path="/" element={<Home />} />
+      <Route path="/docs" element={<Docs />} />
 
-  const handleConvert = async () => {
-    setLoading(true);
-    setError(null);
-    try {
-      const BACKEND_URL =
-        window.location.hostname === 'localhost'
-          ? 'http://localhost:5001'
-          : 'https://py2js-transpiler.onrender.com';
-
-      const response = await axios.post(`${BACKEND_URL}/api/convert`, {
-        code: pythonCode === '' ? 'print("Hello World")' : pythonCode,
-      });
-      const { jsCode } = response.data;
-      if (jsCode.startsWith('{') && jsCode.includes('"error":')) {
-        const errObj = JSON.parse(jsCode);
-        throw new Error(errObj.details);
-      }
-      setJsCode(jsCode || '');
-      
-    } catch (err) {
-      console.error("Error:", err);
-      // alert("This might be an inactivity error due to free server. Please try after 1 minute.")
-      setJsCode("//An Error occured while transpiling your code.");
-      setError("Transpilation error: " + err.message);
-      
-    } finally {
-      setLoading(false);
-    }
-  };
-
-  return (
-    <div className="App">
-      <div className="left-panel">
-        <h1>Python to JavaScript Transpiler</h1>
-        <h5>Python code goes here....</h5>
-        <Editor
-          defaultLanguage="python"
-          theme= "light"
-          options = {{
-            placeholder: `print("Hello World") \n (Press Convert to RUN this) `,
-            minimap: { enabled: false },
-            fontSize: 14,
-          }}
-          value={pythonCode}
-          onChange={(value) => setPythonCode(value || '')}
-        ></Editor>
-
-        <div className="button-row">
-          <FileUploader onFileRead={setPythonCode} />
-          <div className="button-col">
-            <button onClick={handleConvert} disabled={loading}>
-              {loading ? 'Converting...' : 'Convert to JavaScript'}
-            </button>
-            <button disabled={true}>
-              Visit Docs
-            </button>
-          </div>
-        </div>
-      </div>
-
-      <div className="right-panel">
-        
-        <h3>Converted JavaScript Code</h3>
-        {error && <p className="error-message">{error}</p>}
-        <Editor
-        className={"textarea-editor"}
-        height={"calc(min(100% - 20px, 70%))"}
-          defaultLanguage="javascript"
-          theme ="light"
-          rows="10"
-          options = {{
-            readOnly: true,
-            minimap: { enabled: false },
-            fontSize: 14,
-            scrollBeyondLastLine: false,
-            placeholder: `Your Converted JavaScript Code Appears Here:... \n Eg: Console.log("Hello World")`}}
-          value={jsCode}
-          // onChange={()=>()}
-        ></Editor>
-        <div className="button-row">
-          <div className="button-col">
-            <button disabled={true}>
-              Copy to Clipboard
-            </button>
-          </div>
-        </div>
-        
-      </div>
-
-    </div>
-  );
+    </Routes>
+  </Router>);
 
 }
 
