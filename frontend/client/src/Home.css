@@ -24,6 +24,7 @@ body, html, #root {
 .right-panel {
   width: 50%;
   background-color: #fff;
+  /* background-color: red; */
   padding: 20px;
   box-sizing: border-box;
 }

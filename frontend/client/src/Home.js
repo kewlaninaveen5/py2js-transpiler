@@ -93,11 +93,18 @@ function Home() {
 
       <div className="right-panel">
 
-        <h3>Converted JavaScript Code</h3>
+        <h3>Converted JavaScript Code </h3><button
+              onClick={copyToClipboard}
+              disabled={!jsCode}
+              className={`mt-2 mb-2 px-4 py-2 rounded-lg text-white bg-blue-600 hover:bg-blue-700`}
+            >
+              {copied ? "Copied!" : "Copy to Clipboard"}
+            </button>
+
         {error && <p className="error-message">{error}</p>}
         <Editor
           className={"textarea-editor"}
-          height={"calc(min(100% - 20px, 70%))"}
+          height={"calc(min(100% - 20px, 60%))"}
           // ref={codeRef}
           defaultLanguage="javascript"
           theme="light"
@@ -115,16 +122,6 @@ function Home() {
 
 
         <div className="button-row">
-          <div className="button-col">
-            <button
-              onClick={copyToClipboard}
-              disabled={!jsCode}
-              className={`mt-2 px-4 py-2 rounded-lg text-white ${jsCode ? 'bg-blue-600 hover:bg-blue-700' : 'bg-gray-400 cursor-not-allowed'
-                }`}
-            >
-              {copied ? "Copied!" : "Copy to Clipboard"}
-            </button>
-          </div>
             <Network />
         </div>
 
