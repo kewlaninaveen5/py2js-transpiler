@@ -17,9 +17,9 @@ const FileUploader = ({ onFileRead }) => {
     reader.readAsText(file);
   };
 
-  const handleDrop = (e) => {
-    e.preventDefault();
-    handleFile(e.dataTransfer.files[0]);
+  const handleDrop = (event) => {
+    event.preventDefault();
+    handleFile(event.dataTransfer.files[0]);
   };
 
   const handleFileChange = (e) => {
